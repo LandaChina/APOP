@@ -1,0 +1,39 @@
+﻿Q: 证书与SDK中配置项的对应关系
+A：
+    1. 机构(或商户)国密签名证书(后缀为sm2)配在【uassdk.sm2.signCert.path】中（绝对路径精确到文件名），对应的密码配在【uassdk.sm2.signCert.pwd】
+    2. 机构(或商户)国密加密证书（后缀为cer）配在【uassdk.sm2.encryptCert.path】中（绝对路径精确到文件名）
+    3. 机构(或商户)国密验证银联签名证书（后缀为cer）配在【uassdk.sm2.validateCert.dir】（绝对路径精确到文件所在目录级别）
+    4. 机构(或商户)国密解密银联加密报文（后缀为sm2）配在【uassdk.sm2.decryptCert.path】中（绝对路径精确到文件名），对应的密码配在【uassdk.sm2.decryptCert.pwd】
+    5. 机构(或商户)国际签名证书(后缀为pfx)配在【uassdk.signCert.path】中（绝对路径精确到文件名），对应的密码配在【uassdk.signCert.pwd】
+    6. 机构(或商户)国际加密证书（后缀为cer）配在【uassdk.encryptCert.path】中（绝对路径精确到文件名）
+    7. 机构(或商户)国际验证银联签名证书（后缀为cer）配在【uassdk.validateCert.dir】（绝对路径精确到文件所在目录级别）
+    8. 机构(或商户)国际解密银联加密报文（后缀为pfx）配在【uassdk.decryptCert.path】中（绝对路径精确到文件名），对应的密码配在【uassdk.decryptCert.pwd】
+
+
+Q：请求银联系统后收到 HTTP “404” 状态码
+A：根据接口规范检查请求头的bizMethod字段是否填写正确
+
+
+Q：请求银联系统后收到报错信息：【请求头字段缺失】
+A：根据接口规范检查请求头的必填字段是否都填写。通常请求头的必填字段有：version、bizMethod、reqId、appId、appType、signMethod、signId、sign
+
+
+Q：请求银联系统后收到报错信息：【查找接入方证书失败】
+A：通常原因为一窗办上未启用相关证书。同时建议排查请求头signId字段是否为对应签名证书的十进制证书序列号,检查appId和appType填写是否正确
+
+
+Q：使用SDK的国际算法加密，银联报解密失败
+A：检查JDK的版本号；建议版本号不低于1.8.0_161版本
+
+
+Q: 使用SDK的算法做签名，请求头signId、sign字段丢失
+A：检查对应证书文件配置是否正确，私钥证书对应密码是否正确
+
+
+Q：自行实现签名代码请求银联系统后收到报错信息：【验签失败】
+A：按以下步骤逐一排查：
+    1. 检查参与签名的body字符串与实际HTTP请求的报文体是否完全一致（不允许出现空格、换行等差异）
+    2. 如果使用的是国密算法，检查计算sm3摘要的输入参数userId,需要填写签名证书的十进制序列号
+    3. 如果使用的是国际算法，建议使用SDK DEMO代码做一遍签名，然后比较签名结果与自行实现的签名结果是否一致
+    4. 检查待签名字符串转byte[]时是否显式指定"UTF-8"字符集
+

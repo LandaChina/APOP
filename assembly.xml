@@ -1,0 +1,30 @@
+<assembly>
+    <id>bin</id>
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+    <fileSets>
+        <fileSet>
+            <directory>./src</directory>
+            <outputDirectory>./src</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>./</directory>
+            <includes>
+                <include>README.txt</include>
+            </includes>
+            <outputDirectory>./</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>./</directory>
+            <includes>
+                <include>常见问题QA.txt</include>
+            </includes>
+            <outputDirectory>./</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>target/lib</directory>
+            <outputDirectory>./lib</outputDirectory>
+        </fileSet>
+    </fileSets>
+</assembly>

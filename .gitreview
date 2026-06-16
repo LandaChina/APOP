@@ -1,0 +1,4 @@
+[gerrit]
+host=172.17.249.115
+port=29418
+project=uas_uag_demo.git

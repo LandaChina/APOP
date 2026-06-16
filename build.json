@@ -1,0 +1,9 @@
+{
+  "jdk": "jdk1.8",
+  "mvn": "mvn3.6",
+  "pom": "pom.xml",
+  "buildExec": "mvn clean package -DskipTests",
+  "deployList": [
+    "deploy"
+  ]
+}
