@@ -1,0 +1,6 @@
+【接口规范与Demo对应关系】
+1. 接口文档章节8.2.1-已授权联登，对应示例代码为：com.unionpay.uas.demo.cloudpayplatform.ysf.DemoFindUser.java；
+2. 接口文档章节8.2.2-用户授权开通，对应示例代码为：com.unionpay.uas.demo.cloudpayplatform.ysf.DemoBindUser.java；
+3. 接口文档章节8.2.3-绑卡/解绑，对应示例代码为：com.unionpay.uas.demo.cloudpayplatform.ysf.DemoQuickBindCard.java；
+4. 接口文档章节8.2.4-用户关联解除，对应示例代码为：com.unionpay.uas.demo.cloudpayplatform.ysf.DemoUnBindUser.java；
+5. 接口文档章节8.2.5-绑卡通知，对应示例代码为：com.unionpay.uas.demo.cloudpayplatform.ysf.DemoPostBindCard.java；

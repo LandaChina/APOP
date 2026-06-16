@@ -1,0 +1,345 @@
+package com.unionpay.uas.demo.aie.emop;
+
+
+import com.unionpay.uas.sdk.DemoUtil;
+import com.unionpay.uas.sdk.SDKConfig;
+import com.unionpay.uas.sdk.SDKConstants;
+import com.unionpay.uas.sdk.UasService;
+import com.unionpay.uas.sdk.gm.GmSDKConfig;
+import com.unionpay.uas.sdk.gm.GmUasService;
+import org.apache.log4j.Logger;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
+
+/**
+ * <p>AIE系统的接收示例demo，模拟银联->机构:</p>
+ * <pre>
+ *  1. 接收银联发起的请求,解析请求头和请求报文
+ *  2. 根据平台规范对请求数据进行验签
+ *  3. 若有敏感信息则对敏感密文做解密
+ *  4. 若需要返回敏感信息则对敏感明文做加密
+ *  5. 根据平台规范对返回数据进行签名
+ *  6. 将数据应答给银联
+ *  </pre>
+ *  <p>签名验签方式有国际和国密两种方式 推荐使用国密算法</p>
+ *  <p>本demo代码需要jdk版本为1.8.0_161及以上版本</p>
+ *
+ *  <p><b>声明</b>：以下代码只是为了方便商户测试而提供的样例代码，机构可以根据自己需要，按照技术文档编写。该代码仅供参考，不提供编码，性能，规范性等方面的保障</p>
+ *
+ * @author liangqisong
+ *
+ * 移企付业务模拟银联->账户机构交易流向交易（签约申请）
+ */
+
+public class DemoSignRequest {
+    private static final Logger logger = Logger.getLogger(DemoSignRequest.class);
+    public static void main(String[] args) {
+        // 使用国密算法调用此方法
+        GmDemo();
+
+        // 使用国际算法调用此方法
+        RsaDemo();
+    }
+
+    public static void GmDemo(){
+
+        GmSDKConfig.loadPropertiesFromSrc();
+
+
+        // TODO 模拟已解析接出AIE发起的HTTP请求头和请求报文
+        // 注：在某些特殊场景(如HTTP 2.0)下收到的头字段可能为全小写, 此时需要自行解析时做兼容处理
+        // 注：实际从http的报文头中取reqHeader,从http报文中获取报文体内容
+        Map<String, String> reqHeader = new HashMap<>();
+        Map<String, Object> reqBodyMap = new HashMap<>();
+        Map<String, Object> reqEncryptData = new HashMap<>();
+
+        reqHeader.put(SDKConstants.param_bizMethod, "upntAie.emop.sign.request");       // 交易类型 根据实际业务填写
+        reqHeader.put(SDKConstants.param_version, "2.1.0");                // 版本号 根据实际业务填写
+        reqHeader.put(SDKConstants.param_signMethod, "SM2");            // 签名方法
+        //reqHeader.put(SDKConstants.param_signMethod, "RSA2");          // 签名方法
+        reqHeader.put(SDKConstants.param_appId, "00010000");        // 发送方系统索引号 根据实际业务填写
+        reqHeader.put(SDKConstants.param_signId, "69629716832");
+        reqHeader.put(SDKConstants.param_appType, "00"); // 01机构、02商户
+        reqHeader.put(SDKConstants.param_reqId, "v7yvjq75scqlfuk7whw8cz0az58t99h7");      // 发送方流水号，可以自行定制规则
+        reqHeader.put(SDKConstants.param_sign, "RTaiALi8SKgzOqsjZu8fH64o60QWDGEYIXX/M/MPFuAfNKgcWNKFCjHU7vS2gMDVVL7xtnpKwyl5wSQSrxwB4Q==");
+
+        reqEncryptData.put(SDKConstants.param_key,"BAui4Uw50JLTh6zKHDqJPYMXn6sLLLN4ZeLc9v3vm0rN1fXPfB6BAPH06VvDw2UvBW4tgzfEyZdfDedobmAmXzjGkfUr//neVL5apK/G7uIg3Y4acx8bPAAeRkN238xdyIhFDZ6hFEN3JTJVHSng/l4=");
+        reqEncryptData.put(SDKConstants.param_data,"7peakHHHGbS87qt0wTuDizKAo51U2AQ/cKHU6kbxFXMIKR6pfJx603BOLVMT5e5F");
+        reqEncryptData.put(SDKConstants.param_certId,"69629716832");
+        reqEncryptData.put("encryptMethod","SM4");
+        reqBodyMap.put(SDKConstants.param_encryptData,reqEncryptData);
+
+//       注：敏感信息从报文中抽出放在encryptData中，平铺报文中不包含敏感信息
+//        reqBodyMap.put("medInsAccountNo","15474221135487");
+//        reqBodyMap.put("clientNm","客户姓名");
+//        reqBodyMap.put("certifId","123456789123456789");
+
+        reqBodyMap.put("acctInsCode","act0001");
+        reqBodyMap.put("txnDate","20241001");
+        reqBodyMap.put("txnNo","UPSIMNo2024101115000089521201");
+        reqBodyMap.put("sndTime","155335");
+        reqBodyMap.put("trId","shoulipingtaiid");
+        reqBodyMap.put("accessNm","接入方名称");
+        reqBodyMap.put("accessLicTp","01");
+        reqBodyMap.put("accessLicNo","123456781");
+        reqBodyMap.put("companyName","付款企业名称");
+        reqBodyMap.put("licTp","01");
+        reqBodyMap.put("licNo","1474224841");
+        reqBodyMap.put("payerAcctType","10");
+//        reqBodyMap.put("payerAcctNo","zhanghao123");
+//        reqBodyMap.put("payerAcctNm","付款方账户名称");
+        reqBodyMap.put("payerBankNm","付款方开户行名称");
+        reqBodyMap.put("payerBankNo","456789");
+        reqBodyMap.put("contractEffectDate","20240527");
+        reqBodyMap.put("contractExpireDate","20240528");
+        reqBodyMap.put("remark","01");
+//        reqBodyMap.put("acqReserved","01");
+//        reqBodyMap.put("upReserved","01");
+
+
+
+        String reqBodyStr = JSONObject.wrap(reqBodyMap).toString();
+
+        // 组装验签报文
+        Map<String, String> verifyMap = new HashMap<>();
+        verifyMap.put(SDKConstants.param_signId, reqHeader.get(SDKConstants.param_signId));
+        verifyMap.put(SDKConstants.param_sign, reqHeader.get(SDKConstants.param_sign));
+        verifyMap.put(SDKConstants.param_bizMethod, reqHeader.get(SDKConstants.param_bizMethod));
+        verifyMap.put(SDKConstants.param_version, reqHeader.get(SDKConstants.param_version));
+        verifyMap.put(SDKConstants.param_signMethod, reqHeader.get(SDKConstants.param_signMethod));
+        verifyMap.put(SDKConstants.param_appId, reqHeader.get(SDKConstants.param_appId));
+        verifyMap.put(SDKConstants.param_reqId, reqHeader.get(SDKConstants.param_reqId));
+        verifyMap.put(SDKConstants.param_signPubKeyCert, reqHeader.get(SDKConstants.param_signPubKeyCert));
+        verifyMap.put(SDKConstants.param_body, reqBodyStr);
+
+        if (!GmUasService.validate(verifyMap)) {
+            logger.info("验证银联签名失败\n");
+            return;
+        } else {
+            logger.info("验证银联签名成功\n");
+        }
+
+        Map<String, Object> repBody;
+        try {
+            logger.info("从银联获得HTTP请求报文为：" + reqBodyStr + "\n");
+            repBody = DemoUtil.unwarpJson(new JSONObject(reqBodyStr));
+            if (repBody.containsKey("encryptData")) {
+                Map<String, Object> encryptData = (Map<String, Object>) repBody.get(SDKConstants.param_encryptData);
+                String decKey = (String) encryptData.get(SDKConstants.param_key);
+                String decData = (String) encryptData.get(SDKConstants.param_data);
+                String certId = (String) encryptData.get(SDKConstants.param_certId);
+                try {
+                    String decodeStr = GmUasService.gmDec(decData, decKey, certId);
+                    logger.info("解银联加密后的敏感信息的报文：" + decodeStr);
+                } catch (Exception e) {
+                    logger.error(e);
+                }
+            }
+        } catch (JSONException e) {
+            logger.info("应答体解json失败。");
+        }
+
+
+
+        Map<String, String> resData = new TreeMap<>();
+
+        // 组装HTTP应答报文头
+        resData.put(SDKConstants.param_bizMethod, "upntAie.emop.sign.request");       // 交易类型 根据实际业务填写
+        resData.put(SDKConstants.param_version, "2.1.0");                // 版本号 根据实际业务填写
+        resData.put(SDKConstants.param_signMethod, "SM2");               // 签名方法
+        // resData.put(SDKConstants.param_signMethod, "SM2-CERT");               // 签名方法
+        resData.put(SDKConstants.param_appId, "123456789012345");        // 发送方系统索引号 根据实际业务填写
+        resData.put(SDKConstants.param_appType, "01");                   // 01机构、02商户
+        resData.put(SDKConstants.param_reqId, DemoUtil.getReqId());      // 发送方流水号，可以自行定制规则
+
+        // 组装HTTP应答报文体 根据实际业务填写
+        Map<String, Object> bodyMap = new HashMap<>();
+
+
+        bodyMap.put("code", "0000000000");
+        bodyMap.put("msg", "交易成功");
+//        bodyMap.put("medInsAccountNo", "15474221135487");
+        bodyMap.put("contractDate", "20240807");
+        bodyMap.put("contractNo", "15648135748");
+        bodyMap.put("txnNo", "UPSIMNo2024101115000089521201");
+        reqBodyMap.put("acctInsCode","act0001");
+        reqBodyMap.put("txnDate","20241001");
+
+        Map<String, Object> encDataMap = new HashMap<>(); // 需要加密的敏感信息报文 根据实际业务填写
+//        encDataMap.put("medInsAccountNo", "15474221135487");
+
+        String toBeEncData = JSONObject.wrap(encDataMap).toString(); // 待加密报文串
+        logger.info("加密前的敏感信息明文: " + toBeEncData);
+
+        Map<String, String> toBeEncMap = null;
+        try {
+            // 随机生成sm4临时公钥16长度
+            String key = DemoUtil.getRandomString(16);
+            logger.info("随机生成的对称密钥key: " + key + "\n");
+            toBeEncMap = GmUasService.gmEnc(toBeEncData, key, "utf-8");
+        } catch (Exception e) {
+            logger.error(e);
+        }
+
+        // 如果不需要携带敏感信息并由网关解密, 则注释这行代码
+        bodyMap.put(SDKConstants.param_encryptData, toBeEncMap);
+
+        resData.put(SDKConstants.param_body, JSONObject.wrap(bodyMap).toString());
+
+        Map<String, String> resMap = GmUasService.sign(resData);
+        logger.info("签名后报文为: [" + JSONObject.wrap(resMap).toString() + "]\n");
+        // 最后将数据同步应答给AIE
+
+    }
+
+    public static void RsaDemo(){
+
+        SDKConfig.loadPropertiesFromSrc();
+
+        // TODO 模拟已解析接出AIE发起的HTTP请求头和请求报文
+        // 注：实际从http的报文头中取reqHeader,从http报文中获取报文体内容
+        Map<String, String> reqHeader = new HashMap<>();
+        Map<String, Object> reqBodyMap = new HashMap<>();
+        Map<String, Object> reqEncryptData = new HashMap<>();
+
+        reqHeader.put(SDKConstants.param_bizMethod, "upntAie.emop.sign.request");       // 交易类型 根据实际业务填写
+        reqHeader.put(SDKConstants.param_version, "2.1.0");                // 版本号 根据实际业务填写
+//        reqHeader.put(SDKConstants.param_signMethod, "SM2");            // 签名方法
+        reqHeader.put(SDKConstants.param_signMethod, "RSA2");          // 签名方法
+        reqHeader.put(SDKConstants.param_appId, "00010000");        // 发送方系统索引号 根据实际业务填写
+        reqHeader.put(SDKConstants.param_signId, "2");
+        reqHeader.put(SDKConstants.param_appType, "00"); // 01机构、02商户
+        reqHeader.put(SDKConstants.param_reqId, "v7yvjq75scqlfuk7whw8cz0az58t99h7");      // 发送方流水号，可以自行定制规则
+        reqHeader.put(SDKConstants.param_sign, "veG21q+mmVhp3zIfQWBrpxrEd8sWcdNoS6JoJhjhyXDEgWll5E0L3oes/cKABcm1BeEVhx5kNfKgnJ6mtE1RX/xn8V/L6Ob7EPZY0VND5EYmOwzHW4LsmIuiFn/11utc8u0Ze4afllUbqYEpPOG249hfLxyEHvtN9zQLzoYzoobC4P1OtjRzmXzNhasHop3TI/MzExFFohHgpI6OjGDNtIYfrNqhJVe3QhEhgW87+GKZWi8p3tyf7bxj3jfM2XVm4i/0jdCQFYbWLU75H+Jcm6SW+dIjS1xBpfBLm4jkKuFQpOc2dft62ItL9+UQD1IhUjtLOxggtKkB8XGlygo0/g==");
+
+        reqEncryptData.put(SDKConstants.param_key,"bH6Jnkw+L5l2AtVWrReQlER4jLpOmNJAIlZDs2gvzJptLHhfHGVL/1pqI6q6vHMiIF3UhDtV0nC2paZsecvlZ1GNJ7zfk4fkroYtbsah94X+lVB2ObBSkJF/yIdWxRNeEBrWlV6HiHOWaS6/wBHk4Llhuv16TEr61LHh+y8F7qsmM2CkHHuLQ3oEvxPbcewPDgHDUGeqU5A26BDlvn4j+DUCvFQ2+cW54ahWgG8guu5J/za2MXL+ePhr/3r3co0qV98FO9VjMsIg+RWa7CSc1uolS9MljA5JvaRy+cNy5VzLiCE0SxB6aQ9MJ61fqUH8OBWkMZt0KYuX82v4gAbz7Q==");
+        reqEncryptData.put(SDKConstants.param_data,"dVnaiYm0NySa2Q1eiKEx4KOHJBUc2eDaTWBHi6aovsMM4lzolASXjBmum2jZ6TpIAkD7P1ggaDxKTG3cpX2jjUOmoVCYBMp5DEEWeqvC3JqsAbLPC0G1l4AHtOyZ9bqJV9A7ScYmqPdXj1wc7FfLbIHgScz4oe+xrJ7DU8WH89IAcmNjMQtbQzB+O0vocGCdamr5JlAcC0ZL9Cfq4RVf3qrw0PKzKx/qooBs6ZEux4IC3rlTcGK0SfpjVUBWRwh3");
+        reqEncryptData.put(SDKConstants.param_certId,"2");
+        reqEncryptData.put("encryptMethod","AES");
+        reqBodyMap.put(SDKConstants.param_encryptData,reqEncryptData);
+
+//       注：敏感信息从报文中抽出放在encryptData中，平铺报文中不包含敏感信息
+//        reqBodyMap.put("medInsAccountNo","15474221135487");
+//        reqBodyMap.put("clientNm","客户姓名");
+//        reqBodyMap.put("certifId","123456789123456789");
+
+        reqBodyMap.put("acctInsCode","act0001");
+        reqBodyMap.put("txnDate","20241001");
+        reqBodyMap.put("txnNo","UPSIMNo2024101115000089521201");
+        reqBodyMap.put("sndTime","155335");
+        reqBodyMap.put("trId","shoulipingtaiid");
+        reqBodyMap.put("accessNm","接入方名称");
+        reqBodyMap.put("accessLicTp","01");
+        reqBodyMap.put("accessLicNo","123456781");
+        reqBodyMap.put("companyName","付款企业名称");
+        reqBodyMap.put("licTp","01");
+        reqBodyMap.put("licNo","1474224841");
+        reqBodyMap.put("payerAcctType","10");
+//        reqBodyMap.put("payerAcctNo","zhanghao123");
+//        reqBodyMap.put("payerAcctNm","付款方账户名称");
+        reqBodyMap.put("payerBankNm","付款方开户行名称");
+        reqBodyMap.put("payerBankNo","456789");
+        reqBodyMap.put("contractEffectDate","20240527");
+        reqBodyMap.put("contractExpireDate","20240528");
+        reqBodyMap.put("remark","01");
+//        reqBodyMap.put("acqReserved","01");
+//        reqBodyMap.put("upReserved","01");
+
+
+
+        String reqBodyStr = JSONObject.wrap(reqBodyMap).toString();
+
+        // 组装验签报文
+        Map<String, String> verifyMap = new HashMap<>();
+        verifyMap.put(SDKConstants.param_signId, reqHeader.get(SDKConstants.param_signId));
+        
+        verifyMap.put(SDKConstants.param_sign, reqHeader.get(SDKConstants.param_sign));
+        verifyMap.put(SDKConstants.param_bizMethod, reqHeader.get(SDKConstants.param_bizMethod));
+        verifyMap.put(SDKConstants.param_version, reqHeader.get(SDKConstants.param_version));
+        verifyMap.put(SDKConstants.param_signMethod, reqHeader.get(SDKConstants.param_signMethod));
+        verifyMap.put(SDKConstants.param_appId, reqHeader.get(SDKConstants.param_appId));
+        verifyMap.put(SDKConstants.param_reqId, reqHeader.get(SDKConstants.param_reqId));
+        verifyMap.put(SDKConstants.param_signPubKeyCert, reqHeader.get(SDKConstants.param_signPubKeyCert));
+        verifyMap.put(SDKConstants.param_body, reqBodyStr);
+
+        if(!UasService.validate(verifyMap)) {
+            logger.info("验证银联签名失败\n");
+            return;
+        }else {
+            logger.info("验证银联签名成功\n");
+        }
+
+        Map<String, Object> repBody;
+        try {
+            logger.info("从银联获得HTTP请求报文为：" + reqBodyStr + "\n");
+            repBody = DemoUtil.unwarpJson(new JSONObject(reqBodyStr));
+            if (repBody.containsKey("encryptData")) {
+                Map<String, Object> encryptData = (Map<String, Object>) repBody.get(SDKConstants.param_encryptData);
+                String decKey = (String) encryptData.get(SDKConstants.param_key);
+                String decData = (String) encryptData.get(SDKConstants.param_data);
+                String certId = (String) encryptData.get(SDKConstants.param_certId);
+                try {
+                    String decodeStr = UasService.rsaDec(decData, decKey, certId);
+                    logger.info("解银联加密后的敏感信息的报文：" + decodeStr);
+                } catch (Exception e) {
+                    logger.error(e);
+                }
+            }
+        } catch (JSONException e) {
+            logger.info("解析JSON失败");
+        }
+
+
+
+        Map<String, String> resData = new TreeMap<>();
+
+        // 组装http请求报文头
+        resData.put(SDKConstants.param_bizMethod, "upntAie.emop.sign.request");       // 交易类型 根据实际业务填写
+        resData.put(SDKConstants.param_version, "2.1.0");                // 版本号 根据实际业务填写
+        // resData.put(SDKConstants.param_signMethod, "RSA2");           // 签名方法
+        resData.put(SDKConstants.param_signMethod, "RSA2-CERT");         // 签名方法
+        resData.put(SDKConstants.param_appId, "00010000");               // 发送方系统索引号 根据实际业务填写
+        resData.put(SDKConstants.param_appType, "01");                   // 01机构、02商户
+        resData.put(SDKConstants.param_reqId, DemoUtil.getReqId());      // 发送方流水号，可以自行定制规则
+
+        // 组装http请求报文体 根据实际业务填写
+        Map<String, Object> bodyMap = new HashMap<>();
+        bodyMap.put("code", "0000000000");
+        bodyMap.put("msg", "交易成功");
+//        bodyMap.put("medInsAccountNo", "15474221135487");
+        bodyMap.put("contractDate", "20240807");
+        bodyMap.put("contractNo", "15648135748");
+        bodyMap.put("txnNo", "UPSIMNo2024101115000089521201");
+        reqBodyMap.put("acctInsCode","act0001");
+        reqBodyMap.put("txnDate","20241001");
+
+        Map<String, Object> encDataMap = new HashMap<>(); // 需要加密的敏感信息报文 根据实际业务填写
+//        encDataMap.put("medInsAccountNo", "15474221135487");
+
+        String toBeEncData = JSONObject.wrap(encDataMap).toString(); // 待加密报文串
+        logger.info("加密前的敏感信息明文:" + toBeEncData);
+
+        Map<String, String> toBeEncMap = null;
+        try {
+            // 随机生成临时公钥32长度
+            String key = DemoUtil.getRandomString(32);
+            logger.info("随机生成的对称密钥key: " + key + "\n");
+            toBeEncMap = UasService.rsaEnc(toBeEncData, key, "utf-8");
+        } catch (Exception e) {
+            logger.error(e);
+        }
+
+        // 如果不需要携带敏感信息并由网关解密, 则注释这行代码
+        bodyMap.put(SDKConstants.param_encryptData, toBeEncMap);
+
+        resData.put(SDKConstants.param_body, JSONObject.wrap(bodyMap).toString());
+
+        Map<String, String> resMap = UasService.sign(resData);
+        logger.info("签名后报文为: [" + JSONObject.wrap(resMap).toString() + "]\n");
+        // 最后将数据同步应答给AIE
+    }
+}
